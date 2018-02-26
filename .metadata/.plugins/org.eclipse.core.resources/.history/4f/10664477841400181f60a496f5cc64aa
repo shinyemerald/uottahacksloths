@@ -1,0 +1,92 @@
+
+public class GameOfYut {
+	public static final int NO_LANE = 0;
+	public static final int LANE_AB = 1;
+	public static final int LANE_BC = 2;
+	public static final int LANE_CD = 3;
+	public static final int LANE_DA = 4;
+	public static final int LANE_BD = 5;
+	public static final int LANE_CA = 6;
+	public static final int FINISHED = 7;
+	
+	public static final Player[] players = {new Player(1), new Player(2)};
+	public static  Player currentPlayer;
+	
+	public GameOfYut() {
+		playGame();
+	}
+	
+	private void playGame() {
+		int winner = -1;
+		currentPlayer = players[0];
+		for (int i = 0; i < 100; i++) {
+			rollPhase();
+			movePhase(currentPlayer.numRolls());
+		}
+		/*
+		for (currentPlayer = players[0]; winner == -1; currentPlayer = (currentPlayer.equals(players[1])) ? players[0] : players[1]) {
+			rollPhase();
+			movePhase(currentPlayer.numRolls());
+			winner = 1;
+		} */
+	}
+	
+	private void rollPhase() {
+		boolean rollAgain = true;
+		while (rollAgain) {
+			int roll = currentPlayer.roll();
+			System.out.println("Player " + currentPlayer.getNumber() + " rolled a " + roll);
+			if (roll != 4 && roll != 5)
+				rollAgain = false;
+		}
+		System.out.println("Player" + currentPlayer.getNumber() + " has rolled " + currentPlayer.getRolls());
+	}
+	
+	private void movePhase(int numberOfRolls) {
+		int[] rolls = currentPlayer.useRolls();
+		for (int i = 0; i < rolls.length; i++) {
+			movePiece(rolls[i], currentPlayer.getPiece(1), 1);
+		}
+	}
+	
+	private void movePiece(int moves, GamePiece piece, int pieceIndex) {
+		int newIndex = 0;
+		if (piece.getLane() == LANE_BD && moves + piece.getIndex() - 3 == 0)
+			newIndex = 0;
+		else if (piece.getLane() == LANE_CA)
+			newIndex = moves + piece.getIndex() - 6;
+		else if (piece.getLane() == NO_LANE)
+			newIndex = moves + piece.getIndex();
+		else
+			newIndex = moves + piece.getIndex() - 5;
+		if (newIndex > 0) {
+			switch(piece.getLane()) {
+				case NO_LANE:
+					piece.setLane(LANE_AB);
+					break;
+				case LANE_AB:
+					piece.setLane(LANE_BC);
+					break;
+				case LANE_BC:
+					piece.setLane(LANE_CD);
+					break;
+				case LANE_CD:
+					piece.setLane(FINISHED);
+					break;
+			}
+		} else if (newIndex == 0) {
+			if (piece.getLane() == LANE_AB)
+				piece.setLane(LANE_BD);
+			else if (piece.getLane() == LANE_BC)
+				piece.setLane(LANE_CA);
+			else {
+				piece.setLane(LANE_CA);
+				piece.setIndex(3);
+			}
+		} else
+			newIndex = Math.abs(newIndex) + 1;
+		piece.setIndex(newIndex);
+		System.out.println("Player " + currentPlayer.getNumber() + "'s Piece " + pieceIndex + " is now in Lane " + piece.getLane() + 
+				" and index " + piece.getIndex());
+	}
+}

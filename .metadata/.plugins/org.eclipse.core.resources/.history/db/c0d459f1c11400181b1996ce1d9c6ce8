@@ -1,0 +1,6 @@
+
+public class RunsTheGame {
+	public static void main(String[] args) {
+		GameOfYut instance1 = new GameOfYut();
+	}
+}

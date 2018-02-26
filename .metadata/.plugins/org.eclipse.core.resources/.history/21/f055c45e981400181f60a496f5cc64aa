@@ -1,0 +1,118 @@
+import java.util.ArrayList;
+import java.util.Scanner;
+
+public class GameOfYut {
+	public static final int NO_LANE = 0;
+	public static final int LANE_AB = 1;
+	public static final int LANE_BC = 2;
+	public static final int LANE_CD = 3;
+	public static final int LANE_DA = 4;
+	public static final int LANE_BD = 5;
+	public static final int LANE_CA = 6;
+	public static final int FINISHED = 7;
+	
+	public static Player[] players;
+	public static Player currentPlayer;
+	
+	private static Scanner input;
+	
+	public GameOfYut() {
+		input = new Scanner(System.in);
+		players = new Player[2];
+		players[0] = new Player(1);
+		players[1] = new Player(2);
+		playGame();
+		input.close();
+	}
+	
+	private void playGame() {
+		int winner = -1;
+		for (currentPlayer = players[0]; winner == -1; currentPlayer = (currentPlayer.equals(players[1])) ? players[0] : players[1]) {
+			rollPhase();
+			movePhase(currentPlayer.numRolls());
+		}
+	}
+	
+	private void rollPhase() {
+		boolean rollAgain = true;
+		while (rollAgain) {
+			int roll = currentPlayer.roll();
+			//System.out.println("Player " + currentPlayer.getNumber() + " rolled a " + roll);
+			if (roll != 4 && roll != 5)
+				rollAgain = false;
+		}
+		System.out.println("Player" + currentPlayer.getNumber() + " has rolled " + currentPlayer.getStringRolls());
+	}
+	
+	private void movePhase(int numberOfRolls) {
+		for (int i = 0; i < numberOfRolls; i++) {
+			int move = input.nextInt();
+			int index = input.nextInt();
+			ArrayList<GamePiece> otherPieces = currentPlayer.getPieces();
+			GamePiece lastPiece = otherPieces.remove(index);
+			int lastIndex = lastPiece.getIndex();
+			int lastLane = lastPiece.getLane();
+			movePiece(move, index);
+			currentPlayer.useRoll(move);
+			for (GamePiece piece : otherPieces) {
+				if (lastIndex == piece.getIndex() && lastLane == piece.getLane() && lastLane != NO_LANE)
+					movePiece(move, piece.getIndex());
+			}
+		}
+	}
+	
+	private void movePiece(int m, int n) {
+		int newIndex = 0;
+		boolean newLane = true;
+		int laneLength = (currentPlayer.getPiece(n).getLane() == LANE_BD || currentPlayer.getPiece(n).getLane() == LANE_CA) ? 6 : 5;
+		if (currentPlayer.getPiece(n).getLane() == LANE_BD && m + currentPlayer.getPiece(n).getIndex() - 3 == 0)
+			newIndex = 0;
+		else if (m + currentPlayer.getPiece(n).getIndex() >= laneLength)
+			newIndex =  m + currentPlayer.getPiece(n).getIndex() - laneLength;
+		else {
+			newIndex = m + currentPlayer.getPiece(n).getIndex();
+			newLane = false;
+		}
+		
+		if (newIndex == 0 && currentPlayer.getPiece(n).getLane() == LANE_BD) {
+			currentPlayer.setLane(n, LANE_CA);
+			currentPlayer.setIndex(n, 3);
+		} else if (newIndex == 0 && currentPlayer.getPiece(n).getLane() == LANE_AB) {
+			currentPlayer.setLane(n, LANE_BD);
+			currentPlayer.setIndex(n, newIndex);
+		} else if (newIndex == 0 && currentPlayer.getPiece(n).getLane() == LANE_BC) {
+			currentPlayer.setLane(n, LANE_CA);
+			currentPlayer.setIndex(n, newIndex);
+		} else if (newIndex > 0) {
+			currentPlayer.setIndex(n, newIndex);
+			if (currentPlayer.getPiece(n).getLane() == NO_LANE)
+				currentPlayer.setLane(n, LANE_AB);
+			if (newLane) {
+				switch(currentPlayer.getPiece(n).getLane()) {
+				case LANE_AB:
+					currentPlayer.setLane(n, LANE_BC);
+					break;
+				case LANE_BC:
+					currentPlayer.setLane(n, LANE_CD);
+					break;
+				case LANE_CD:
+					currentPlayer.setLane(n, LANE_DA);
+					break;
+				case LANE_BD:
+					currentPlayer.setLane(n, LANE_DA);
+					break;
+				case LANE_DA:
+					currentPlayer.setLane(n, FINISHED);
+					break;
+				case LANE_CA:
+					currentPlayer.setLane(n, FINISHED);
+			}
+			}
+		}
+		System.out.println("Player " + currentPlayer.getNumber() + "'s Piece " + n + " is now in Lane " + currentPlayer.getPiece(n).getLane() + " and index " + currentPlayer.getPiece(n).getIndex());
+	}
+	
+	private void savePreviousPiece() {
+		
+	}
+}
